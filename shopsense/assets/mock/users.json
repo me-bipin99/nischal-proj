@@ -1,0 +1,13 @@
+{
+  "currentUser": {
+    "id": "USR-8821",
+    "fullName": "Alex Morgan",
+    "email": "alex.morgan@shopsense.io",
+    "role": "Store Manager",
+    "phone": "+1 (555) 234-5678",
+    "shopName": "ShopSense Supermarket & Retail",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+    "location": "New York, NY",
+    "joinedDate": "January 2025"
+  }
+}

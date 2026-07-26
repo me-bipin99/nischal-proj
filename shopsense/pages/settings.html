@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopSense | System Settings</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+  <div id="app-layout">
+    <div id="sidebar-container"></div>
+
+    <div class="main-wrapper">
+      <div id="topbar-container"></div>
+
+      <main class="content-area">
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+          <div>
+            <h1 class="page-title">Store & System Settings</h1>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/index.html">ShopSense</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Settings</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-12 col-lg-8">
+            <form id="settings-form" class="card p-4">
+              <h5 class="fw-bold mb-3 border-bottom pb-2">General Store Profile</h5>
+              
+              <div class="mb-3">
+                <label for="setting-store-name" class="form-label fw-semibold">Store Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="setting-store-name" required>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <label for="setting-currency" class="form-label fw-semibold">Primary Currency</label>
+                  <select class="form-select" id="setting-currency">
+                    <option value="USD ($)">USD ($)</option>
+                    <option value="EUR (€)">EUR (€)</option>
+                    <option value="GBP (£)">GBP (£)</option>
+                    <option value="CAD ($)">CAD ($)</option>
+                    <option value="AUD ($)">AUD ($)</option>
+                    <option value="INR (₹)">INR (₹)</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label for="setting-timezone" class="form-label fw-semibold">Store Timezone</label>
+                  <select class="form-select" id="setting-timezone">
+                    <option value="America/New_York (UTC-05:00)">America/New_York (UTC-05:00)</option>
+                    <option value="America/Chicago (UTC-06:00)">America/Chicago (UTC-06:00)</option>
+                    <option value="America/Los_Angeles (UTC-08:00)">America/Los_Angeles (UTC-08:00)</option>
+                    <option value="Europe/London (UTC+00:00)">Europe/London (UTC+00:00)</option>
+                    <option value="Asia/Tokyo (UTC+09:00)">Asia/Tokyo (UTC+09:00)</option>
+                  </select>
+                </div>
+              </div>
+
+              <h5 class="fw-bold mb-3 border-bottom pb-2 mt-4">Inventory Thresholds & Billing</h5>
+
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <label for="setting-threshold" class="form-label fw-semibold">Global Low Stock Threshold</label>
+                  <input type="number" class="form-control" id="setting-threshold" required>
+                  <small class="text-muted">Default item threshold to trigger low stock alerts.</small>
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label for="setting-tax-rate" class="form-label fw-semibold">Sales Tax Rate (%)</label>
+                  <input type="number" step="0.1" class="form-control" id="setting-tax-rate">
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="setting-footer" class="form-label fw-semibold">Receipt Footer Message</label>
+                <textarea class="form-control" id="setting-footer" rows="2"></textarea>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-1"></i> Save Preferences
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="col-12 col-lg-4">
+            <div class="card p-4">
+              <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>API & Integration Status</h5>
+              <p class="text-muted small">Frontend is pre-architected to seamlessly swap local JSON endpoints with Flask REST APIs.</p>
+              
+              <div class="bg-light p-3 rounded-3 small mb-3">
+                <div class="fw-bold text-dark mb-1">Current Mock Endpoint:</div>
+                <code class="text-primary d-block mb-2">fetch("/assets/mock/settings.json")</code>
+                <div class="fw-bold text-dark mb-1">Flask API Swap Target:</div>
+                <code class="text-success d-block">fetch("/api/v1/settings")</code>
+              </div>
+
+              <div class="badge bg-success-subtle text-success p-2 rounded-3 text-center d-block">
+                <i class="bi bi-check-circle-fill me-1"></i> API Ready Architecture
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/common.js"></script>
+  <script src="/assets/js/settings.js"></script>
+</body>
+</html>

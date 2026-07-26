@@ -1,0 +1,107 @@
+{
+  "clusters": {
+    "fastMoving": {
+      "id": "fastMoving",
+      "name": "Fast Moving",
+      "color": "#2563EB",
+      "bgColor": "rgba(37, 99, 235, 0.15)",
+      "badge": "bg-primary-subtle text-primary",
+      "description": "High sales velocity & predictable demand. Requires consistent safety stock.",
+      "count": 18,
+      "avgTurnoverDays": 6.5,
+      "totalRevenueShare": "58%"
+    },
+    "seasonal": {
+      "id": "seasonal",
+      "name": "Seasonal",
+      "color": "#8B5CF6",
+      "bgColor": "rgba(139, 92, 246, 0.15)",
+      "badge": "bg-purple-subtle text-purple",
+      "description": "Spikes in demand during specific periods or weather changes. Flexible reordering required.",
+      "count": 12,
+      "avgTurnoverDays": 18.2,
+      "totalRevenueShare": "27%"
+    },
+    "slowMoving": {
+      "id": "slowMoving",
+      "name": "Slow Moving",
+      "color": "#F59E0B",
+      "bgColor": "rgba(245, 158, 11, 0.15)",
+      "badge": "bg-warning-subtle text-warning",
+      "description": "Low turnover rate & high storage cost. Consider promotional discounts or bundle deals.",
+      "count": 8,
+      "avgTurnoverDays": 45.0,
+      "totalRevenueShare": "15%"
+    }
+  },
+  "timeframes": {
+    "Month": {
+      "scatterData": {
+        "fastMoving": [
+          {"x": 180, "y": 48.5, "productName": "Organic Espresso Beans 500g", "sku": "BEV-ESP-001", "stock": 8, "monthlyRevenue": 4365.00},
+          {"x": 165, "y": 42.0, "productName": "Wireless Bluetooth Earbuds Pro", "sku": "ELE-EAR-042", "stock": 42, "monthlyRevenue": 21448.35},
+          {"x": 140, "y": 52.0, "productName": "Artisanal Dark Chocolate 85%", "sku": "FOO-CHO-007", "stock": 120, "monthlyRevenue": 630.00},
+          {"x": 210, "y": 55.0, "productName": "Sparkling Mineral Water 750ml", "sku": "BEV-WAT-003", "stock": 140, "monthlyRevenue": 672.00},
+          {"x": 155, "y": 45.0, "productName": "Organic Green Tea Match 100g", "sku": "BEV-TEA-012", "stock": 4, "monthlyRevenue": 2867.50}
+        ],
+        "seasonal": [
+          {"x": 95, "y": 38.0, "productName": "Hydrating Facial Cleanser 200ml", "sku": "PER-FAC-108", "stock": 65, "monthlyRevenue": 2280.00},
+          {"x": 110, "y": 32.5, "productName": "Vitamin C Radiance Serum 30ml", "sku": "PER-SRM-033", "stock": 2, "monthlyRevenue": 3740.00},
+          {"x": 80, "y": 41.0, "productName": "Thermal Stainless Water Bottle", "sku": "HOM-BOT-022", "stock": 28, "monthlyRevenue": 1960.00},
+          {"x": 75, "y": 36.0, "productName": "Sunscreen SPF 50 Lotion", "sku": "PER-SUN-099", "stock": 45, "monthlyRevenue": 1425.00}
+        ],
+        "slowMoving": [
+          {"x": 25, "y": 28.0, "productName": "Smart LED Desk Lamp Touch Control", "sku": "ELE-LMP-015", "stock": 0, "monthlyRevenue": 1247.50},
+          {"x": 30, "y": 22.0, "productName": "Microfiber All-Purpose Cloth 5-Pack", "sku": "HOM-CLN-088", "stock": 85, "monthlyRevenue": 269.70},
+          {"x": 18, "y": 15.0, "productName": "Ergonomic Memory Foam Pillow", "sku": "HOM-PLW-004", "stock": 19, "monthlyRevenue": 855.00},
+          {"x": 12, "y": 18.0, "productName": "Vintage Copper Teapot", "sku": "HOM-POT-009", "stock": 11, "monthlyRevenue": 715.00}
+        ]
+      }
+    },
+    "Last Month": {
+      "scatterData": {
+        "fastMoving": [
+          {"x": 170, "y": 46.0, "productName": "Organic Espresso Beans 500g", "sku": "BEV-ESP-001", "stock": 12, "monthlyRevenue": 4123.00},
+          {"x": 150, "y": 40.0, "productName": "Wireless Bluetooth Earbuds Pro", "sku": "ELE-EAR-042", "stock": 35, "monthlyRevenue": 19498.00},
+          {"x": 135, "y": 50.0, "productName": "Artisanal Dark Chocolate 85%", "sku": "FOO-CHO-007", "stock": 90, "monthlyRevenue": 607.00}
+        ],
+        "seasonal": [
+          {"x": 105, "y": 40.0, "productName": "Hydrating Facial Cleanser 200ml", "sku": "PER-FAC-108", "stock": 50, "monthlyRevenue": 2520.00},
+          {"x": 120, "y": 35.0, "productName": "Vitamin C Radiance Serum 30ml", "sku": "PER-SRM-033", "stock": 15, "monthlyRevenue": 4080.00}
+        ],
+        "slowMoving": [
+          {"x": 20, "y": 25.0, "productName": "Smart LED Desk Lamp Touch Control", "sku": "ELE-LMP-015", "stock": 3, "monthlyRevenue": 998.00},
+          {"x": 28, "y": 20.0, "productName": "Microfiber All-Purpose Cloth 5-Pack", "sku": "HOM-CLN-088", "stock": 90, "monthlyRevenue": 251.00}
+        ]
+      }
+    },
+    "3 Months": {
+      "scatterData": {
+        "fastMoving": [
+          {"x": 520, "y": 47.0, "productName": "Organic Espresso Beans 500g", "sku": "BEV-ESP-001", "stock": 8, "monthlyRevenue": 12610.00},
+          {"x": 480, "y": 41.5, "productName": "Wireless Bluetooth Earbuds Pro", "sku": "ELE-EAR-042", "stock": 42, "monthlyRevenue": 62395.00}
+        ],
+        "seasonal": [
+          {"x": 290, "y": 37.0, "productName": "Hydrating Facial Cleanser 200ml", "sku": "PER-FAC-108", "stock": 65, "monthlyRevenue": 6960.00}
+        ],
+        "slowMoving": [
+          {"x": 70, "y": 26.0, "productName": "Smart LED Desk Lamp Touch Control", "sku": "ELE-LMP-015", "stock": 0, "monthlyRevenue": 3493.00}
+        ]
+      }
+    },
+    "Year": {
+      "scatterData": {
+        "fastMoving": [
+          {"x": 2100, "y": 48.0, "productName": "Organic Espresso Beans 500g", "sku": "BEV-ESP-001", "stock": 8, "monthlyRevenue": 50925.00},
+          {"x": 1850, "y": 42.0, "productName": "Wireless Bluetooth Earbuds Pro", "sku": "ELE-EAR-042", "stock": 42, "monthlyRevenue": 240480.00}
+        ],
+        "seasonal": [
+          {"x": 1100, "y": 38.0, "productName": "Hydrating Facial Cleanser 200ml", "sku": "PER-FAC-108", "stock": 65, "monthlyRevenue": 26400.00}
+        ],
+        "slowMoving": [
+          {"x": 280, "y": 25.0, "productName": "Smart LED Desk Lamp Touch Control", "sku": "ELE-LMP-015", "stock": 0, "monthlyRevenue": 13972.00}
+        ]
+      }
+    }
+  }
+}

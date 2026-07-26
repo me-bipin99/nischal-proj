@@ -1,0 +1,14 @@
+{
+  "storeName": "ShopSense Supermarket & Retail",
+  "currency": "USD ($)",
+  "timezone": "America/New_York (UTC-05:00)",
+  "lowStockThreshold": 15,
+  "taxRate": 8.5,
+  "receiptFooter": "Thank you for shopping at ShopSense! Visit us again soon.",
+  "notifications": {
+    "emailAlerts": true,
+    "lowStockAlerts": true,
+    "dailySalesSummary": true,
+    "weeklyForecastReport": false
+  }
+}

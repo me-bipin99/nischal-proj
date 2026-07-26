@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopSense | Product Inventory</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+
+  <div id="app-layout">
+    <div id="sidebar-container"></div>
+
+    <div class="main-wrapper">
+      <div id="topbar-container"></div>
+
+      <main class="content-area">
+        <!-- Page Header -->
+        <div class="page-header d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+          <div>
+            <h1 class="page-title">Product Inventory</h1>
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/index.html">ShopSense</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Products</li>
+              </ol>
+            </nav>
+          </div>
+          <div>
+            <a href="/pages/add-product.html" class="btn btn-primary">
+              <i class="bi bi-plus-lg me-1"></i> Add New Product
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Card -->
+        <div class="card p-3 p-md-4 mb-4">
+          <div class="row g-3 align-items-center">
+            <!-- Search Bar -->
+            <div class="col-12 col-md-4">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control border-start-0 bg-light" id="product-search" placeholder="Search product name, SKU, or supplier...">
+              </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-12 col-sm-6 col-md-3">
+              <select class="form-select" id="category-filter" aria-label="Filter by Category">
+                <option value="all">All Categories</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Electronics & Accessories">Electronics & Accessories</option>
+                <option value="Packaged Foods & Snacks">Packaged Foods & Snacks</option>
+                <option value="Personal Care & Cosmetics">Personal Care & Cosmetics</option>
+                <option value="Home & Cleaning">Home & Cleaning</option>
+              </select>
+            </div>
+
+            <!-- Stock Status Filter -->
+            <div class="col-12 col-sm-6 col-md-2">
+              <select class="form-select" id="status-filter" aria-label="Filter by Stock Status">
+                <option value="all">All Statuses</option>
+                <option value="In Stock">In Stock (Green)</option>
+                <option value="Low Stock">Low Stock (Yellow)</option>
+                <option value="Out of Stock">Out of Stock (Red)</option>
+              </select>
+            </div>
+
+            <!-- Sort By Selector -->
+            <div class="col-12 col-md-3">
+              <select class="form-select" id="sort-select" aria-label="Sort Products">
+                <option value="name-asc">Sort: Name (A to Z)</option>
+                <option value="name-desc">Sort: Name (Z to A)</option>
+                <option value="stock-low">Sort: Stock (Low to High)</option>
+                <option value="stock-high">Sort: Stock (High to Low)</option>
+                <option value="price-high">Sort: Price (High to Low)</option>
+                <option value="price-low">Sort: Price (Low to High)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products Table Card -->
+        <div class="card p-3 p-md-4">
+          <div class="table-responsive">
+            <table class="table table-custom align-middle">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Product Name & Supplier</th>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th>Stock / Min</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                <!-- Loaded dynamically from products.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Footer -->
+          <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 mt-3 pt-3 border-top">
+            <div class="text-muted small" id="products-count-info">
+              Showing products...
+            </div>
+            <nav aria-label="Products pagination">
+              <ul class="pagination pagination-sm mb-0" id="products-pagination">
+                <!-- Rendered dynamically -->
+              </ul>
+            </nav>
+          </div>
+        </div>
+
+      </main>
+
+      <div id="footer-container"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/common.js"></script>
+  <script src="/assets/js/products.js"></script>
+</body>
+</html>

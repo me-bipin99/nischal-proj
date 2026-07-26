@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "todaysSales": 2840.50,
+    "todaysSalesGrowth": 14.2,
+    "totalRevenue": 84290.00,
+    "totalRevenueGrowth": 8.5,
+    "totalProducts": 248,
+    "categoriesCount": 18,
+    "lowStockCount": 12,
+    "outOfStockCount": 4,
+    "predictionSummary": {
+      "projectedDemand7Days": 410,
+      "projectedRevenue7Days": 14250.00,
+      "topTrendingCategory": "Electronics & Accessories",
+      "stockoutRiskItem": "Organic Espresso Beans 500g"
+    }
+  },
+  "predictionChart": {
+    "7days": {
+      "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "actualSales": [1200, 1450, 1100, 1380, 2100, 2840, null],
+      "predictedSales": [1180, 1400, 1120, 1350, 2050, 2750, 2600]
+    },
+    "14days": {
+      "labels": ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7", "Day 8", "Day 9", "Day 10", "Day 11", "Day 12", "Day 13", "Day 14"],
+      "actualSales": [1100, 1250, 1300, 1450, 1100, 1380, 2100, 2840, null, null, null, null, null, null],
+      "predictedSales": [1120, 1200, 1320, 1400, 1150, 1350, 2050, 2750, 2600, 2450, 2300, 2700, 3100, 2900]
+    },
+    "30days": {
+      "labels": ["W1-D1", "W1-D4", "W1-D7", "W2-D3", "W2-D7", "W3-D3", "W3-D7", "W4-D3", "W4-D7"],
+      "actualSales": [1200, 1380, 2840, 1400, 2900, null, null, null, null],
+      "predictedSales": [1180, 1350, 2750, 1450, 2850, 3100, 3400, 3200, 3600]
+    }
+  },
+  "inventoryStatus": {
+    "inStock": 198,
+    "lowStock": 38,
+    "outOfStock": 12,
+    "percentages": {
+      "inStock": 80,
+      "lowStock": 15,
+      "outOfStock": 5
+    }
+  },
+  "categoryCards": [
+    {
+      "id": "cat-1",
+      "name": "Beverages",
+      "itemCount": 45,
+      "totalSales": 18400.00,
+      "stockHealthPercentage": 92,
+      "icon": "bi-cup-straw",
+      "badgeColor": "primary"
+    },
+    {
+      "id": "cat-2",
+      "name": "Electronics & Accessories",
+      "itemCount": 32,
+      "totalSales": 26100.00,
+      "stockHealthPercentage": 78,
+      "icon": "bi-headphones",
+      "badgeColor": "info"
+    },
+    {
+      "id": "cat-3",
+      "name": "Packaged Foods & Snacks",
+      "itemCount": 68,
+      "totalSales": 15200.00,
+      "stockHealthPercentage": 88,
+      "icon": "bi-box-seam",
+      "badgeColor": "success"
+    },
+    {
+      "id": "cat-4",
+      "name": "Personal Care & Cosmetics",
+      "itemCount": 42,
+      "totalSales": 12800.00,
+      "stockHealthPercentage": 85,
+      "icon": "bi-heart-pulse",
+      "badgeColor": "warning"
+    },
+    {
+      "id": "cat-5",
+      "name": "Home & Cleaning",
+      "itemCount": 61,
+      "totalSales": 11790.00,
+      "stockHealthPercentage": 72,
+      "icon": "bi-house-heart",
+      "badgeColor": "secondary"
+    }
+  ],
+  "recentSales": [
+    {
+      "id": "INV-2026-0891",
+      "customer": "Sarah Jenkins",
+      "product": "Organic Espresso Beans 500g",
+      "amount": 48.50,
+      "qty": 2,
+      "date": "2026-07-24 10:42 AM",
+      "paymentMethod": "Credit Card",
+      "status": "Completed"
+    },
+    {
+      "id": "INV-2026-0890",
+      "customer": "David Miller",
+      "product": "Wireless Bluetooth Earbuds Pro",
+      "amount": 129.99,
+      "qty": 1,
+      "date": "2026-07-24 10:15 AM",
+      "paymentMethod": "Apple Pay",
+      "status": "Completed"
+    },
+    {
+      "id": "INV-2026-0889",
+      "customer": "Emma Watson",
+      "product": "Hydrating Facial Cleanser 200ml",
+      "amount": 24.00,
+      "qty": 1,
+      "date": "2026-07-24 09:50 AM",
+      "paymentMethod": "Cash",
+      "status": "Completed"
+    },
+    {
+      "id": "INV-2026-0888",
+      "customer": "Michael Chang",
+      "product": "Eco-Friendly Dishwashing Gel 1L",
+      "amount": 35.70,
+      "qty": 3,
+      "date": "2026-07-24 09:22 AM",
+      "paymentMethod": "Debit Card",
+      "status": "Completed"
+    },
+    {
+      "id": "INV-2026-0887",
+      "customer": "Lisa Ray",
+      "product": "Artisanal Dark Chocolate 85%",
+      "amount": 18.00,
+      "qty": 4,
+      "date": "2026-07-24 08:45 AM",
+      "paymentMethod": "Credit Card",
+      "status": "Completed"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ALT-901",
+    "productId": "PRD-1006",
+    "productName": "Smart LED Desk Lamp Touch Control",
+    "sku": "ELE-LMP-015",
+    "category": "Electronics & Accessories",
+    "currentStock": 0,
+    "reorderLevel": 8,
+    "recommendedReorderQty": 25,
+    "severity": "critical",
+    "status": "unread",
+    "message": "Out of Stock! Immediate reorder required to meet projected demand.",
+    "timestamp": "2026-07-24 07:30 AM"
+  },
+  {
+    "id": "ALT-902",
+    "productId": "PRD-1010",
+    "productName": "Vitamin C Radiance Serum 30ml",
+    "sku": "PER-SRM-033",
+    "category": "Personal Care & Cosmetics",
+    "currentStock": 2,
+    "reorderLevel": 12,
+    "recommendedReorderQty": 30,
+    "severity": "critical",
+    "status": "unread",
+    "message": "Critical low stock (2 left). Projected stockout in 1.5 days.",
+    "timestamp": "2026-07-24 08:15 AM"
+  },
+  {
+    "id": "ALT-903",
+    "productId": "PRD-1008",
+    "productName": "Organic Green Tea Match 100g",
+    "sku": "BEV-TEA-012",
+    "category": "Beverages",
+    "currentStock": 4,
+    "reorderLevel": 10,
+    "recommendedReorderQty": 20,
+    "severity": "warning",
+    "status": "unread",
+    "message": "Stock level (4) dropped below threshold (10). High demand item.",
+    "timestamp": "2026-07-24 09:00 AM"
+  },
+  {
+    "id": "ALT-904",
+    "productId": "PRD-1004",
+    "productName": "Eco-Friendly Dishwashing Gel 1L",
+    "sku": "HOM-CLN-019",
+    "category": "Home & Cleaning",
+    "currentStock": 5,
+    "reorderLevel": 12,
+    "recommendedReorderQty": 35,
+    "severity": "warning",
+    "status": "unread",
+    "message": "Low stock warning (5 left). Reorder recommended before weekend.",
+    "timestamp": "2026-07-23 04:20 PM"
+  },
+  {
+    "id": "ALT-905",
+    "productId": "PRD-1001",
+    "productName": "Organic Espresso Beans 500g",
+    "sku": "BEV-ESP-001",
+    "category": "Beverages",
+    "currentStock": 8,
+    "reorderLevel": 15,
+    "recommendedReorderQty": 50,
+    "severity": "warning",
+    "status": "read",
+    "message": "Stock level (8) below reorder threshold (15). Supplier lead time: 2 days.",
+    "timestamp": "2026-07-23 11:10 AM"
+  }
+]
