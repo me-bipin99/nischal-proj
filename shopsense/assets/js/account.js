@@ -4,6 +4,7 @@
  */
 
 let currentAccount = null;
+let newAvatarDataUrl = null;   // set only when user picks a new file
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!ShopSense.requireAuth()) return;
@@ -18,14 +19,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (avatarInput && avatarPreview) {
     avatarInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          avatarPreview.src = evt.target.result;
-          ShopSense.showToast('Avatar Preview', 'Image selected. Click Save Profile to apply.', 'info');
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+
+      if (file.size > 1024 * 1024) {
+        ShopSense.showToast('File Too Large', 'Avatar image must be under 1 MB.', 'warning');
+        avatarInput.value = '';
+        return;
       }
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        newAvatarDataUrl = evt.target.result;   // remember new selection
+        avatarPreview.src = newAvatarDataUrl;
+        ShopSense.showToast('Avatar Preview', 'Image selected. Click Save Profile to apply.', 'info');
+      };
+      reader.readAsDataURL(file);
     });
   }
 
@@ -38,8 +46,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const payload = {
         fullName: document.getElementById('acc-fullname').value.trim(),
         phone: document.getElementById('acc-phone').value.trim(),
-        avatar: avatarPreview ? avatarPreview.src : undefined
       };
+
+      // Only include avatar when the user actually picked a new file
+      if (newAvatarDataUrl) {
+        payload.avatar = newAvatarDataUrl;
+      }
 
       const submitBtn = profileForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
@@ -56,18 +68,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         currentAccount = data;
+        newAvatarDataUrl = null;   // clear after successful save
         populateAccountForm(currentAccount);
 
-        // Keep the cached user record (used for the topbar name) in sync
+        // Keep the cached user record (used for the topbar name + avatar) in sync
         const storedUser = JSON.parse(localStorage.getItem(ShopSense.KEYS.USER) || '{}');
         localStorage.setItem(ShopSense.KEYS.USER, JSON.stringify(Object.assign({}, storedUser, {
           fullName: data.fullName,
-          email: data.email
+          email: data.email,
+          avatar: data.avatar || storedUser.avatar || '',
         })));
 
-        // Update Topbar username if visible
+        // Update topbar name and avatar live without a page reload
         const topbarNameElem = document.getElementById('topbar-user-name');
         if (topbarNameElem) topbarNameElem.textContent = data.fullName;
+
+        const topbarAvatarElem = document.getElementById('topbar-user-avatar');
+        if (topbarAvatarElem && data.avatar) topbarAvatarElem.src = data.avatar;
 
         ShopSense.showToast('Profile Saved', 'Your account details have been updated.', 'success');
       } catch (error) {
@@ -92,8 +109,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      if (newPass.length < 6) {
-        ShopSense.showToast('Weak Password', 'New password must be at least 6 characters.', 'warning');
+      if (newPass.length < 8) {
+        ShopSense.showToast('Weak Password', 'New password must be at least 8 characters.', 'warning');
         return;
       }
 

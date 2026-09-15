@@ -35,7 +35,8 @@
           <label for="login-email" class="form-label fw-semibold">Email Address</label>
           <div class="input-group">
             <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
-            <input type="email" class="form-control border-start-0" id="login-email" placeholder="alex.morgan@shopsense.io" value="alex.morgan@shopsense.io" required>
+            <input type="text" class="form-control border-start-0 login-placeholder-input" id="login-email"
+              data-placeholder="Enter your email" data-real-type="email" autocomplete="email" required>
           </div>
         </div>
 
@@ -46,7 +47,12 @@
           </div>
           <div class="input-group">
             <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
-            <input type="password" class="form-control border-start-0" id="login-password" placeholder="••••••••" value="password123" required>
+            <input type="text" class="form-control border-start-0 border-end-0 login-placeholder-input" id="login-password"
+              data-placeholder="Enter your password" data-real-type="password" autocomplete="current-password" required>
+            <button class="input-group-text bg-light text-muted border-start-0" type="button" id="toggle-password"
+              tabindex="-1" title="Show/hide password" style="cursor:pointer;">
+              <i class="bi bi-eye" id="toggle-password-icon"></i>
+            </button>
           </div>
         </div>
 
@@ -71,5 +77,58 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/assets/js/common.js"></script>
   <script src="/assets/js/auth.js"></script>
+
+  <script>
+    // ── Placeholder-style inputs ──────────────────────────────────────────────
+    // Inputs start as type="text" showing placeholder text in muted style.
+    // On focus/click the placeholder clears and the input switches to its real type.
+    // On blur, if empty, placeholder is restored.
+    document.querySelectorAll('.login-placeholder-input').forEach(function(input) {
+      const placeholder = input.getAttribute('data-placeholder');
+      const realType    = input.getAttribute('data-real-type');
+
+      // Start in placeholder state
+      input.value = placeholder;
+      input.classList.add('login-input-placeholder');
+
+      input.addEventListener('focus', function() {
+        if (input.classList.contains('login-input-placeholder')) {
+          input.value = '';
+          input.classList.remove('login-input-placeholder');
+          input.type = realType;
+        }
+      });
+
+      input.addEventListener('blur', function() {
+        if (input.value === '') {
+          input.value = placeholder;
+          input.classList.add('login-input-placeholder');
+          input.type = 'text'; // show placeholder as readable text
+        }
+      });
+
+      // Don't submit placeholder text as actual value
+      input.form && input.form.addEventListener('submit', function() {
+        if (input.classList.contains('login-input-placeholder')) {
+          input.value = '';
+        }
+      }, { once: false });
+    });
+
+    // ── Password eye toggle ───────────────────────────────────────────────────
+    const toggleBtn  = document.getElementById('toggle-password');
+    const toggleIcon = document.getElementById('toggle-password-icon');
+    const pwdInput   = document.getElementById('login-password');
+
+    toggleBtn.addEventListener('click', function() {
+      // Only act if the field is in real-password mode (not placeholder state)
+      if (pwdInput.classList.contains('login-input-placeholder')) return;
+
+      const isPassword = pwdInput.type === 'password';
+      pwdInput.type = isPassword ? 'text' : 'password';
+      toggleIcon.classList.toggle('bi-eye',      !isPassword);
+      toggleIcon.classList.toggle('bi-eye-slash', isPassword);
+    });
+  </script>
 </body>
 </html>

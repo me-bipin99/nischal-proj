@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('products-table-body')) {
     await loadProducts();
     initProductsPage();
+
+    // Re-render the table when the user switches currency so all displayed
+    // prices update instantly without a page reload.
+    window.addEventListener('currencychange', () => renderProductsTable());
   }
 
   // Initialize Add Product Form
@@ -23,8 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize Edit Product Form
-  if (document.getElementById('edit-product-form')) {
-    await loadProducts();
+  if (document.getElementById('edit-product-form') || document.getElementById('edit-loading')) {
     initEditProductForm();
   }
 });
@@ -134,7 +137,7 @@ function renderProductsTable() {
           <small class="text-muted">/ ${p.reorderLevel} min</small>
         </td>
         <td>${p.unit}</td>
-        <td class="fw-semibold">${ShopSense.formatCurrency(p.unitPrice)}</td>
+        <td class="fw-semibold" data-price-usd="${p.unitPrice}">${ShopSense.formatCurrency(p.unitPrice)}</td>
         <td><span class="badge ${statusBadgeClass}">${p.status}</span></td>
         <td>
           <div class="dropdown">
@@ -225,13 +228,13 @@ function showProductDetailsModal(productId) {
               <div class="col-6">
                 <div class="p-3 bg-light rounded-3">
                   <div class="text-muted small">Unit Selling Price</div>
-                  <div class="fw-bold fs-5 text-dark">${ShopSense.formatCurrency(prod.unitPrice)}</div>
+                  <div class="fw-bold fs-5 text-dark" data-price-usd="${prod.unitPrice}">${ShopSense.formatCurrency(prod.unitPrice)}</div>
                 </div>
               </div>
               <div class="col-6">
                 <div class="p-3 bg-light rounded-3">
                   <div class="text-muted small">Unit Cost Price</div>
-                  <div class="fw-bold fs-5 text-dark">${ShopSense.formatCurrency(prod.costPrice)}</div>
+                  <div class="fw-bold fs-5 text-dark" data-price-usd="${prod.costPrice}">${ShopSense.formatCurrency(prod.costPrice)}</div>
                 </div>
               </div>
               <div class="col-6">
@@ -348,64 +351,245 @@ function initAddProductForm() {
 }
 
 // Edit Product Form Handler
-function initEditProductForm() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const productId = urlParams.get('id');
-  const prod = productsList.find(p => p.id === productId);
+async function initEditProductForm() {
+  const urlParams   = new URLSearchParams(window.location.search);
+  const productId   = urlParams.get('id');
+  const loadingElem = document.getElementById('edit-loading');
+  const notFoundElem = document.getElementById('edit-not-found');
+  const formElem    = document.getElementById('edit-product-form');
 
-  if (prod) {
-    document.getElementById('prod-name').value = prod.name;
-    document.getElementById('prod-sku').value = prod.sku;
-    document.getElementById('prod-category').value = prod.category;
-    document.getElementById('prod-stock').value = prod.stock;
-    document.getElementById('prod-unit').value = prod.unit;
-    document.getElementById('prod-price').value = prod.unitPrice;
-    document.getElementById('prod-cost').value = prod.costPrice;
-    document.getElementById('prod-reorder').value = prod.reorderLevel;
-    if (document.getElementById('prod-supplier')) document.getElementById('prod-supplier').value = prod.supplier || '';
-    if (document.getElementById('prod-img-preview')) document.getElementById('prod-img-preview').src = prod.image;
+  if (!productId) {
+    if (loadingElem)  loadingElem.style.display  = 'none';
+    if (notFoundElem) notFoundElem.style.display = '';
+    return;
   }
 
-  const form = document.getElementById('edit-product-form');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
+  // Fetch this product directly from the API so we always have fresh data.
+  // Falls back to the already-loaded productsList if the direct fetch fails
+  // (e.g. navigated here from the products table which already has the data).
+  let prod = null;
+  console.log('[EditProduct] productId from URL:', productId);
+  console.log('[EditProduct] token present:', !!localStorage.getItem('shopsense_auth_token'));
+  try {
+    const resp = await ShopSense.apiFetch(`/api/products/${productId}`);
+    console.log('[EditProduct] fetch status:', resp.status);
+    if (resp.ok) {
+      prod = await resp.json();
+      console.log('[EditProduct] prod loaded:', prod?.name);
+    } else if (resp.status !== 401) {
+      const body = await resp.text().catch(() => '');
+      console.error(`[EditProduct] fetch failed: HTTP ${resp.status}`, body);
+    }
+  } catch (err) {
+    console.warn('[EditProduct] fetch threw:', err?.message);
+  }
+
+  // Fallback: check productsList (populated if user came from products.html)
+  if (!prod && productsList.length > 0) {
+    prod = productsList.find(p => p.id === productId) || null;
+    if (prod) console.log('[EditProduct] found in productsList cache');
+  }
+
+  // Last resort: fetch the full list and search within it
+  if (!prod) {
+    console.log('[EditProduct] trying full list fallback');
+    try {
+      const allProds = await ShopSense.fetchData(ShopSense.KEYS.PRODUCTS, '/api/products') || [];
+      prod = allProds.find(p => p.id === productId) || null;
+      if (prod) console.log('[EditProduct] found via full list');
+    } catch (err) {
+      console.error('[EditProduct] full list fallback failed:', err?.message);
+    }
+  }
+
+  console.log('[EditProduct] final prod:', prod ? prod.name : 'NULL — will show not-found');
+
+  if (loadingElem) loadingElem.style.display = 'none';
+
+  if (!prod) {
+    if (notFoundElem) notFoundElem.style.display = '';
+    return;
+  }
+
+  // Show form, update breadcrumb
+  if (formElem) formElem.style.display = '';
+  const titleElem = document.getElementById('edit-page-title');
+  if (titleElem) titleElem.textContent = `Edit: ${prod.name}`;
+  const crumbElem = document.getElementById('edit-breadcrumb');
+  if (crumbElem) crumbElem.textContent = prod.name;
+
+  // ── Populate all fields ──────────────────────────────────────────────────
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.value = val;
+  };
+
+  set('prod-name',     prod.name);
+  set('prod-sku',      prod.sku);
+  set('prod-category', prod.category);
+  set('prod-supplier', prod.supplier || '');
+  set('prod-price',    prod.unitPrice);
+  set('prod-cost',     prod.costPrice || '');
+  set('prod-stock',    prod.stock);
+  set('prod-unit',     prod.unit);
+  set('prod-reorder',  prod.reorderLevel);
+
+  // Image preview
+  const preview = document.getElementById('prod-img-preview');
+  if (preview && prod.image) preview.src = prod.image;
+
+  // Image URL field
+  const urlInput = document.getElementById('prod-image-url');
+  if (urlInput && prod.image) urlInput.value = prod.image;
+
+  // Sync unit label on stock input group
+  syncUnitLabel();
+
+  // Initial margin calculation
+  updateMargin();
+
+  // ── Image: file upload ───────────────────────────────────────────────────
+  const fileInput = document.getElementById('prod-image');
+  if (fileInput && preview) {
+    fileInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        preview.src = evt.target.result;
+        if (urlInput) urlInput.value = ''; // clear URL field when file chosen
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ── Image: URL input ─────────────────────────────────────────────────────
+  if (urlInput && preview) {
+    urlInput.addEventListener('input', () => {
+      const url = urlInput.value.trim();
+      if (url) {
+        preview.src = url;
+        if (fileInput) fileInput.value = ''; // clear file input when URL typed
+      }
+    });
+  }
+
+  // ── Image overlay hover effect ───────────────────────────────────────────
+  const overlay = preview?.parentElement?.querySelector('.prod-img-overlay');
+  const overlayIcon = overlay?.querySelector('.prod-img-overlay-icon');
+  if (overlay && overlayIcon) {
+    overlay.addEventListener('mouseenter', () => {
+      overlay.style.background = 'rgba(0,0,0,0.45)';
+      overlayIcon.style.opacity = '1';
+    });
+    overlay.addEventListener('mouseleave', () => {
+      overlay.style.background = 'rgba(0,0,0,0)';
+      overlayIcon.style.opacity = '0';
+    });
+  }
+
+  // ── Unit label sync ──────────────────────────────────────────────────────
+  const unitSelect = document.getElementById('prod-unit');
+  if (unitSelect) unitSelect.addEventListener('change', syncUnitLabel);
+
+  function syncUnitLabel() {
+    const label = document.getElementById('prod-unit-label');
+    if (label && unitSelect) label.textContent = unitSelect.value || 'pcs';
+  }
+
+  // ── Live margin calculator ───────────────────────────────────────────────
+  const priceInput = document.getElementById('prod-price');
+  const costInput  = document.getElementById('prod-cost');
+  const stockInput = document.getElementById('prod-stock');
+
+  if (priceInput) priceInput.addEventListener('input', updateMargin);
+  if (costInput)  costInput.addEventListener('input',  updateMargin);
+  if (stockInput) stockInput.addEventListener('input',  updateMargin);
+
+  function updateMargin() {
+    const price = parseFloat(document.getElementById('prod-price')?.value) || 0;
+    const cost  = parseFloat(document.getElementById('prod-cost')?.value)  || 0;
+    const stock = parseInt(document.getElementById('prod-stock')?.value)   || 0;
+
+    const marginPct   = document.getElementById('margin-value');
+    const profitUnit  = document.getElementById('profit-per-unit');
+    const stockVal    = document.getElementById('stock-value-preview');
+
+    if (!marginPct) return;
+
+    if (price > 0 && cost > 0) {
+      const pct   = ((price - cost) / price) * 100;
+      const profit = price - cost;
+      marginPct.textContent  = pct.toFixed(1) + '%';
+      marginPct.className    = `fw-bold ${pct >= 20 ? 'text-success' : pct >= 0 ? 'text-warning' : 'text-danger'}`;
+      if (profitUnit) profitUnit.textContent = ShopSense.formatCurrency(profit);
+    } else {
+      marginPct.textContent = '—';
+      marginPct.className   = 'fw-bold text-muted';
+      if (profitUnit) profitUnit.textContent = '—';
+    }
+
+    if (stockVal) {
+      stockVal.textContent = price > 0 && stock > 0
+        ? ShopSense.formatCurrency(price * stock)
+        : '—';
+    }
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────
+  if (formElem) {
+    formElem.addEventListener('submit', async e => {
       e.preventDefault();
-      const updatedStock = parseInt(document.getElementById('prod-stock').value) || 0;
-      const reorderVal = parseInt(document.getElementById('prod-reorder').value) || 10;
+
+      // Resolve image: file upload wins over URL field, URL wins over original
+      let imageValue = prod.image; // default: keep existing
+      const fileInput = document.getElementById('prod-image');
+      const urlInput  = document.getElementById('prod-image-url');
+      const previewEl = document.getElementById('prod-img-preview');
+
+      if (fileInput?.files?.[0] && previewEl?.src?.startsWith('data:')) {
+        // File was picked — use the base64 data URI
+        imageValue = previewEl.src;
+      } else if (urlInput?.value.trim()) {
+        imageValue = urlInput.value.trim();
+      }
 
       const payload = {
-        name: document.getElementById('prod-name').value.trim(),
-        sku: document.getElementById('prod-sku').value.trim(),
-        category: document.getElementById('prod-category').value,
-        stock: updatedStock,
-        unit: document.getElementById('prod-unit').value,
-        unitPrice: parseFloat(document.getElementById('prod-price').value) || 0,
-        costPrice: parseFloat(document.getElementById('prod-cost').value) || 0,
-        reorderLevel: reorderVal,
-        supplier: document.getElementById('prod-supplier') ? document.getElementById('prod-supplier').value.trim() : undefined
+        name:         document.getElementById('prod-name')?.value.trim(),
+        sku:          document.getElementById('prod-sku')?.value.trim(),
+        category:     document.getElementById('prod-category')?.value.trim(),
+        supplier:     document.getElementById('prod-supplier')?.value.trim() || undefined,
+        unitPrice:    parseFloat(document.getElementById('prod-price')?.value)  || 0,
+        costPrice:    parseFloat(document.getElementById('prod-cost')?.value)   || 0,
+        stock:        parseInt(document.getElementById('prod-stock')?.value)    || 0,
+        unit:         document.getElementById('prod-unit')?.value,
+        reorderLevel: parseInt(document.getElementById('prod-reorder')?.value)  || 0,
+        image:        imageValue,
       };
 
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
+      const submitBtn = document.getElementById('edit-submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving…';
+      }
 
       try {
-        const response = await ShopSense.apiFetch(`/api/products/${productId}`, {
+        const resp = await ShopSense.apiFetch(`/api/products/${productId}`, {
           method: 'PUT',
-          body: JSON.stringify(payload)
+          body:   JSON.stringify(payload)
         });
-        const data = await response.json().catch(() => ({}));
+        const data = await resp.json().catch(() => ({}));
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to update product.');
+        if (!resp.ok) throw new Error(data.error || 'Failed to update product.');
+
+        ShopSense.showToast('Product Updated', `${data.name} saved successfully.`, 'success');
+        setTimeout(() => { window.location.href = '/pages/products.html'; }, 800);
+      } catch (err) {
+        ShopSense.showToast('Save Failed', err.message || 'Could not save changes.', 'danger');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="bi bi-save me-1"></i> Save Changes';
         }
-
-        ShopSense.showToast('Product Updated', 'Product information saved successfully.', 'success');
-        setTimeout(() => {
-          window.location.href = '/pages/products.html';
-        }, 800);
-      } catch (error) {
-        ShopSense.showToast('Update Failed', error.message || 'Could not update product.', 'danger');
-        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }

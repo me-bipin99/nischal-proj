@@ -1,0 +1,331 @@
+/* ============================================================
+   ShopSense — Sales Page Styles
+   Covers: two-panel layout, sticky form, fuzzy search dropdown,
+           cart rows, bill modal
+   ============================================================ */
+
+/* ── Two-panel layout ────────────────────────────────────────────────────── */
+
+.sales-content-area {
+  /* Make this the scroll container so the sticky form can anchor here */
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start; /* allows sticky positioning to work */
+  flex: 1;
+}
+
+/* ── Sticky form panel ───────────────────────────────────────────────────── */
+
+.sales-form-panel {
+  /* Fixed width that doesn't shrink; sticks to topbar bottom */
+  width: 360px;
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(64px + 1.75rem); /* topbar height + content-area padding */
+  max-height: calc(100vh - 64px - 1.75rem - 1.75rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.sales-form-panel::-webkit-scrollbar {
+  width: 5px;
+}
+.sales-form-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sales-form-panel::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 99px;
+}
+
+.sales-form-card {
+  /* Remove any fixed height so the card grows with cart items */
+  height: auto !important;
+}
+
+/* ── Scrollable sales table panel ────────────────────────────────────────── */
+
+.sales-table-panel {
+  flex: 1;
+  min-width: 0; /* prevent overflow blowing out layout */
+}
+
+.sales-table-card {
+  height: auto !important;
+}
+
+.sales-table-scroll {
+  /* Let the table scroll within the card if needed on very small screens;
+     the panel itself is not height-constrained — page scroll handles it */
+  overflow-x: auto;
+}
+
+/* ── Product search wrapper ──────────────────────────────────────────────── */
+
+.product-search-wrapper {
+  position: relative;
+}
+
+.product-search-wrapper .input-group-text {
+  border-radius: 12px 0 0 12px;
+  border-color: #e2e8f0;
+}
+
+.product-search-wrapper .form-control {
+  border-radius: 0 12px 12px 0;
+}
+
+/* ── Fuzzy-match dropdown ────────────────────────────────────────────────── */
+
+.product-search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.10);
+  z-index: 500;
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.product-search-item {
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.1s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.product-search-item:last-child {
+  border-bottom: none;
+}
+
+.product-search-item:hover,
+.product-search-item.active {
+  background-color: #eff6ff;
+}
+
+.product-search-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.product-search-item.in-cart {
+  background-color: #f0fdf4;
+}
+
+.product-search-empty {
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+/* ── Cart section ────────────────────────────────────────────────────────── */
+
+.cart-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+/* Individual cart row */
+.cart-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  row-gap: 0.15rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cart-item-info {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.cart-item-controls {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cart-item-subtotal {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 56px;
+}
+
+/* Qty +/- buttons */
+.cart-qty-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.cart-qty-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.cart-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Qty number input */
+.cart-qty-input {
+  width: 40px;
+  height: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #1e293b;
+  padding: 0;
+  background: #fff;
+  -moz-appearance: textfield;
+}
+.cart-qty-input::-webkit-inner-spin-button,
+.cart-qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+.cart-qty-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+/* Shows when qty == stock — red border signals the limit is hit */
+.cart-qty-input.at-stock-limit {
+  border-color: #ef4444;
+  color: #dc2626;
+  font-weight: 600;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+}
+
+/* Remove button */
+.cart-remove-btn {
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.cart-remove-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── Cart total box ──────────────────────────────────────────────────────── */
+
+.cart-total-box {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+/* ── Bill modal line items ───────────────────────────────────────────────── */
+
+.bill-line-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 0.75rem;
+  row-gap: 0.1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.bill-line-item:last-child {
+  border-bottom: none;
+}
+
+.bill-line-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.875rem;
+}
+
+.bill-line-meta {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.bill-line-total {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.9rem;
+  color: #1e293b;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Responsive: stack panels on smaller screens ─────────────────────────── */
+
+@media (max-width: 991.98px) {
+  .sales-layout {
+    flex-direction: column;
+  }
+
+  .sales-form-panel {
+    width: 100%;
+    position: static; /* un-sticky on mobile; page scrolls normally */
+    max-height: none;
+    overflow-y: visible;
+  }
+}

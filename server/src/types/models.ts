@@ -69,7 +69,7 @@ export interface ISaleDocument {
 }
 
 export type AlertSeverity = "critical" | "warning";
-export type AlertStatus = "unread" | "read";
+export type AlertStatus = "unread" | "read" | "processing" | "restocked" | "acknowledged";
 
 export interface IAlertDocument {
   _id: Types.ObjectId;
@@ -78,6 +78,7 @@ export interface IAlertDocument {
   severity: AlertSeverity;
   status: AlertStatus;
   message: string;
+  sellerResponse: string;      // ETA/response chosen by supplier e.g. "Delivered", "Will be delivered by tomorrow"
   recommendedReorderQty: number;
   createdAt: Date;
   updatedAt: Date;

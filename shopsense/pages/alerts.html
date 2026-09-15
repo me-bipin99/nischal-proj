@@ -83,11 +83,13 @@
               </select>
             </div>
             <div class="col-12 col-sm-6 col-md-4">
-              <label for="alert-status-filter" class="form-label small text-muted mb-1">Filter Read Status</label>
-              <select class="form-select" id="alert-status-filter" aria-label="Filter Read Status">
+              <label for="alert-status-filter" class="form-label small text-muted mb-1">Filter Status</label>
+              <select class="form-select" id="alert-status-filter" aria-label="Filter Status">
                 <option value="all">All Statuses</option>
-                <option value="unread">Unread Only</option>
-                <option value="read">Read Only</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
+                <option value="processing">⏳ Processing (Awaiting Supplier)</option>
+                <option value="restocked">✅ Restocked</option>
               </select>
             </div>
           </div>

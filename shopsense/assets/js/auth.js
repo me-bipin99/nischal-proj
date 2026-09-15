@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       clearAuthFormError(loginForm);
 
+      // Clear any inputs still showing placeholder text before reading values
+      loginForm.querySelectorAll('.login-placeholder-input').forEach(function(el) {
+        if (el.classList.contains('login-input-placeholder')) el.value = '';
+      });
+
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value.trim();
 

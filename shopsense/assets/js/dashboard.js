@@ -30,6 +30,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // /api/sales calls.
   loadCategoryCards();
   loadRecentSales();
+
+  // Re-render all dynamic table content when the user changes currency
+  // in Settings (same tab or another tab). Static [data-price-usd] elements
+  // are handled automatically by ShopSense.refreshPrices(); re-generated
+  // innerHTML rows need an explicit re-render pass.
+  window.addEventListener('currencychange', () => {
+    renderDashboardKPIs(summary);
+    // Re-render category cards and sales from already-fetched data to avoid
+    // extra network round-trips.
+    const catContainer = document.getElementById('category-cards-container');
+    if (catContainer && catContainer._categoriesData) {
+      renderCategoryCards(catContainer._categoriesData);
+    }
+    const salesBody = document.getElementById('recent-sales-table-body');
+    if (salesBody && salesBody._salesData) {
+      renderRecentSales(salesBody._salesData);
+    }
+  });
 });
 
 // Render Top Summary KPI Cards
@@ -42,8 +60,14 @@ function renderDashboardKPIs(summary) {
   const lowStockElem = document.getElementById('kpi-low-stock');
   const predictionSummaryElem = document.getElementById('kpi-prediction-summary');
 
-  if (todaysSalesElem) todaysSalesElem.textContent = ShopSense.formatCurrency(summary.todaysSales);
-  if (totalRevenueElem) totalRevenueElem.textContent = ShopSense.formatCurrency(summary.totalRevenue);
+  if (todaysSalesElem) {
+    todaysSalesElem.setAttribute('data-price-usd', summary.todaysSales);
+    todaysSalesElem.textContent = ShopSense.formatCurrency(summary.todaysSales);
+  }
+  if (totalRevenueElem) {
+    totalRevenueElem.setAttribute('data-price-usd', summary.totalRevenue);
+    totalRevenueElem.textContent = ShopSense.formatCurrency(summary.totalRevenue);
+  }
   if (totalProductsElem) totalProductsElem.textContent = summary.totalProducts;
   if (lowStockElem) lowStockElem.textContent = summary.lowStockCount;
 
@@ -53,7 +77,7 @@ function renderDashboardKPIs(summary) {
         <span class="text-muted small">7-Day Demand Projection</span>
         <span class="badge bg-primary-subtle text-primary fw-semibold">${summary.predictionSummary.projectedDemand7Days} Units</span>
       </div>
-      <div class="fw-bold fs-5 text-dark">${ShopSense.formatCurrency(summary.predictionSummary.projectedRevenue7Days)}</div>
+      <div class="fw-bold fs-5 text-dark" data-price-usd="${summary.predictionSummary.projectedRevenue7Days}">${ShopSense.formatCurrency(summary.predictionSummary.projectedRevenue7Days)}</div>
       <div class="text-muted small mt-1">
         <i class="bi bi-graph-up text-success me-1"></i> Top: <strong>${summary.predictionSummary.topTrendingCategory}</strong>
       </div>
@@ -99,54 +123,116 @@ function initPredictionChart() {
     const parent = canvas.parentElement;
     if (parent) parent.querySelectorAll('.prediction-empty-state').forEach(el => el.remove());
 
+    // todayIndex from the API tells us which label slot is "today" —
+    // everything to its left is history, everything to its right is forecast.
+    const todayIndex = tf.todayIndex ?? 0;
+
+    // Build a vertical "Today" annotation line using a Chart.js plugin that
+    // draws directly on the canvas after each render. We inject it as a custom
+    // inline plugin so we have no external dependency.
+    const todayLinePlugin = {
+      id: 'todayLine',
+      afterDraw(chart) {
+        const { ctx: c, scales } = chart;
+        if (!scales.x) return;
+        const xPos = scales.x.getPixelForValue(todayIndex);
+        const yTop = scales.y.top;
+        const yBottom = scales.y.bottom;
+
+        c.save();
+        c.beginPath();
+        c.setLineDash([6, 4]);
+        c.strokeStyle = '#64748B';
+        c.lineWidth = 1.5;
+        c.moveTo(xPos, yTop);
+        c.lineTo(xPos, yBottom);
+        c.stroke();
+
+        // "Today" label tag
+        c.setLineDash([]);
+        c.fillStyle = '#64748B';
+        c.font = '500 11px Poppins, sans-serif';
+        c.textAlign = 'center';
+        c.fillText('Today', xPos, yTop - 6);
+        c.restore();
+      }
+    };
+
     predictionChartInstance = new Chart(ctx, {
       type: 'line',
+      plugins: [todayLinePlugin],
       data: {
         labels: tf.labels,
         datasets: [
           {
-            label: 'Actual Sales ($)',
+            // Actual sales — solid blue line, only drawn over past history.
+            // spanGaps: false stops the line at the last non-null point so it
+            // doesn't extend into the forecast zone.
+            label: 'Actual Sales',
             data: tf.actualSales,
             borderColor: '#2563EB',
-            backgroundColor: 'rgba(37, 99, 235, 0.08)',
-            borderWidth: 3,
+            backgroundColor: 'rgba(37, 99, 235, 0.07)',
+            borderWidth: 2.5,
             fill: true,
-            tension: 0.3,
-            pointRadius: 4,
-            pointBackgroundColor: '#2563EB'
+            tension: 0.35,
+            pointRadius: 3.5,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#2563EB',
+            spanGaps: false
           },
           {
-            label: 'AI Forecasted Sales ($)',
+            // AI forecast — dashed purple line, only drawn over future dates.
+            // spanGaps: false stops it from bridging back through the null
+            // history slots.
+            label: 'AI Forecast',
             data: tf.predictedSales,
             borderColor: '#8B5CF6',
-            backgroundColor: 'transparent',
+            backgroundColor: 'rgba(139, 92, 246, 0.06)',
             borderWidth: 2,
-            borderDash: [5, 5],
-            tension: 0.3,
+            fill: true,
+            borderDash: [6, 4],
+            tension: 0.35,
             pointRadius: 3,
-            pointBackgroundColor: '#8B5CF6'
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#8B5CF6',
+            spanGaps: false
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          // Show all dataset values at a given x-position in a single tooltip
+          mode: 'index',
+          intersect: false
+        },
         plugins: {
           legend: {
             position: 'top',
             labels: {
               usePointStyle: true,
-              font: { family: 'Poppins', size: 12 }
+              pointStyleWidth: 16,
+              font: { family: 'Poppins', size: 12 },
+              color: '#374151'
             }
           },
           tooltip: {
             backgroundColor: '#0F172A',
             padding: 12,
-            titleFont: { family: 'Poppins', size: 13 },
+            cornerRadius: 8,
+            titleFont: { family: 'Poppins', size: 12, weight: '600' },
             bodyFont: { family: 'Poppins', size: 12 },
             callbacks: {
-              label: function(context) {
-                return `${context.dataset.label}: $${context.raw || 0}`;
+              title(items) {
+                const label = items[0]?.label || '';
+                const idx = items[0]?.dataIndex ?? -1;
+                const zone = idx < todayIndex ? 'History' : idx === todayIndex ? 'Today' : 'Forecast';
+                return `${label}  ·  ${zone}`;
+              },
+              label(context) {
+                if (context.raw === null || context.raw === undefined) return null;
+                return `  ${context.dataset.label}: ${ShopSense.formatCurrency(context.raw)}`;
               }
             }
           }
@@ -154,14 +240,22 @@ function initPredictionChart() {
         scales: {
           x: {
             grid: { display: false },
-            ticks: { font: { family: 'Poppins', size: 11 }, color: '#64748B' }
+            ticks: {
+              font: { family: 'Poppins', size: 10 },
+              color: '#64748B',
+              // Thin out labels on wider ranges so they don't crowd
+              maxTicksLimit: 16,
+              maxRotation: 45,
+              autoSkip: true
+            }
           },
           y: {
             grid: { color: '#F1F5F9' },
+            beginAtZero: true,
             ticks: {
               font: { family: 'Poppins', size: 11 },
               color: '#64748B',
-              callback: value => '$' + value
+              callback: value => ShopSense.formatCurrency(value)
             }
           }
         }
@@ -242,6 +336,8 @@ async function loadCategoryCards() {
   }));
 
   renderCategoryCards(categories);
+  // Cache for currency re-render (avoids extra network round-trip)
+  container._categoriesData = categories;
 }
 
 // Render Category Cards
@@ -268,7 +364,7 @@ function renderCategoryCards(categories) {
         </div>
         <div class="d-flex align-items-center justify-content-between text-muted small mb-1">
           <span>Stock Value:</span>
-          <span class="fw-semibold text-dark">${ShopSense.formatCurrency(cat.stockValue)}</span>
+          <span class="fw-semibold text-dark" data-price-usd="${cat.stockValue}">${ShopSense.formatCurrency(cat.stockValue)}</span>
         </div>
         <div class="progress" style="height: 6px;">
           <div class="progress-bar bg-${cat.badgeColor}" role="progressbar" style="width: ${cat.stockHealthPercentage}%;" aria-valuenow="${cat.stockHealthPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
@@ -288,7 +384,10 @@ async function loadRecentSales() {
   if (!tableBody) return;
 
   const salesResp = await ShopSense.fetchData(ShopSense.KEYS.SALES, '/api/sales?page=1&pageSize=5');
-  renderRecentSales(salesResp ? salesResp.sales : []);
+  const sales = salesResp ? salesResp.sales : [];
+  // Cache for currency re-render (avoids extra network round-trip)
+  tableBody._salesData = sales;
+  renderRecentSales(sales);
 }
 
 // Render Recent Sales Table
@@ -306,7 +405,7 @@ function renderRecentSales(recentSales) {
       <td class="fw-semibold text-primary">${sale.invoiceNo}</td>
       <td>${sale.customerName}</td>
       <td>${sale.productName} <span class="badge bg-light text-muted ms-1">x${sale.quantity}</span></td>
-      <td class="fw-semibold">${ShopSense.formatCurrency(sale.totalAmount)}</td>
+      <td class="fw-semibold" data-price-usd="${sale.totalAmount}">${ShopSense.formatCurrency(sale.totalAmount)}</td>
       <td><span class="badge badge-soft-primary">${sale.paymentMethod}</span></td>
       <td class="text-muted small">${ShopSense.formatSaleDateTime(sale.date, sale.time)}</td>
       <td><span class="badge badge-soft-success">${sale.status}</span></td>
@@ -330,3 +429,5 @@ function initQuickActions() {
     });
   }
 }
+
+

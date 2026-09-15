@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         populateSettingsForm(data);
+
+        // Persist the active currency to localStorage so all other pages
+        // immediately pick it up via ShopSense.getCurrency(), then fire the
+        // custom event so any listener on this same page can re-render prices.
+        const newCurrency = data.currency || updated.currency;
+        localStorage.setItem('shopsense_currency', newCurrency);
+        window.dispatchEvent(new CustomEvent('currencychange', { detail: { currency: newCurrency } }));
+
         ShopSense.showToast('Settings Saved', 'System preferences updated successfully!', 'success');
       } catch (error) {
         ShopSense.showToast('Save Failed', error.message || 'Could not save settings.', 'danger');
@@ -51,9 +59,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function populateSettingsForm(settingsData) {
   if (document.getElementById('setting-store-name')) document.getElementById('setting-store-name').value = settingsData.storeName || '';
-  if (document.getElementById('setting-currency')) document.getElementById('setting-currency').value = settingsData.currency || 'USD ($)';
+  if (document.getElementById('setting-currency')) document.getElementById('setting-currency').value = settingsData.currency || 'USD';
   if (document.getElementById('setting-timezone')) document.getElementById('setting-timezone').value = settingsData.timezone || '';
   if (document.getElementById('setting-threshold')) document.getElementById('setting-threshold').value = settingsData.lowStockThreshold || 15;
   if (document.getElementById('setting-tax-rate')) document.getElementById('setting-tax-rate').value = settingsData.taxRate || 8.5;
   if (document.getElementById('setting-footer')) document.getElementById('setting-footer').value = settingsData.receiptFooter || '';
+
+  // Keep localStorage in sync with whatever the server says the currency is.
+  // This ensures that on first load (or after a session restore) the rest of
+  // the app immediately uses the correct currency without requiring a save.
+  if (settingsData.currency) {
+    localStorage.setItem('shopsense_currency', settingsData.currency);
+    window.dispatchEvent(new CustomEvent('currencychange', { detail: { currency: settingsData.currency } }));
+  }
 }

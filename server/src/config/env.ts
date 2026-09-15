@@ -23,4 +23,15 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET as string,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
   corsOrigin: process.env.CORS_ORIGIN ?? "http://localhost:5500",
+
+  // Base URLs
+  serverUrl:   process.env.SERVER_URL   ?? "http://localhost:4000",
+  frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:5500",
+
+  // SMTP
+  smtpHost: process.env.SMTP_HOST ?? "smtp.ethereal.email",
+  smtpPort: Number(process.env.SMTP_PORT ?? 587),
+  smtpUser: process.env.SMTP_USER ?? "",
+  smtpPass: process.env.SMTP_PASS ?? "",
+  smtpFrom: process.env.SMTP_FROM ?? "ShopSense Inventory <noreply@shopsense.dev>",
 };

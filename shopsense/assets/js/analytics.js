@@ -58,6 +58,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadClusters(e.target.value);
     });
   }
+
+  // Re-run the last cluster load when currency changes so all revenue figures
+  // in product cards update instantly without a page reload.
+  window.addEventListener('currencychange', () => {
+    const filter = document.getElementById('analytics-timeframe-filter');
+    loadClusters(filter ? filter.value : 'Month');
+  });
 });
 
 async function loadClusters(timeframeLabel) {
@@ -119,7 +126,7 @@ function renderUnclustered(products) {
             <code class="text-muted small d-block mb-2">${p.sku}</code>
             <div class="d-flex justify-content-between small text-muted">
               <span>Stock: <strong class="text-dark">${p.stock}</strong></span>
-              <span>Revenue: <strong class="text-dark">${ShopSense.formatCurrency(p.revenue)}</strong></span>
+              <span>Revenue: <strong class="text-dark" data-price-usd="${p.revenue}">${ShopSense.formatCurrency(p.revenue)}</strong></span>
             </div>
           </div>
         </div>
@@ -269,7 +276,7 @@ function renderProductCards(scatterData) {
           </div>
           <div class="d-flex justify-content-between text-muted">
             <span>Revenue Generated:</span>
-            <strong class="text-primary">${ShopSense.formatCurrency(prod.revenue)}</strong>
+            <strong class="text-primary" data-price-usd="${prod.revenue}">${ShopSense.formatCurrency(prod.revenue)}</strong>
           </div>
         </div>
         <div class="small text-muted mt-auto pt-1">

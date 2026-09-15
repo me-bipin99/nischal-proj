@@ -63,6 +63,10 @@ async function seedSalesForDays(
 }
 
 describe("GET /api/dashboard/prediction", () => {
+  // The new forecast model always prepends HISTORY_WINDOW (14) days of actual
+  // sales before the forecast window, so total labels = 14 + rangeDays.
+  const HISTORY_WINDOW = 14;
+
   it("returns insufficientData:true with fewer than 2 periods of sales data", async () => {
     const { token, store, user } = await createTestUser();
     const product = await createProduct(token);
@@ -73,7 +77,7 @@ describe("GET /api/dashboard/prediction", () => {
     expect(res.body).toEqual({ insufficientData: true });
   });
 
-  it("returns 7 labels/predictedSales for range=7days with null actualSales for today, given 2+ weeks of history", async () => {
+  it("returns history+forecast arrays for range=7days with null predictedSales in history slots", async () => {
     const { token, store, user } = await createTestUser();
     const product = await createProduct(token);
     const offsets = Array.from({ length: 14 }, (_, i) => -(i + 1)); // -1..-14
@@ -81,14 +85,27 @@ describe("GET /api/dashboard/prediction", () => {
 
     const res = await request(app).get("/api/dashboard/prediction?range=7days").set(authHeader(token));
     expect(res.status).toBe(200);
-    expect(res.body.labels).toHaveLength(7);
-    expect(res.body.predictedSales).toHaveLength(7);
-    expect(res.body.actualSales).toHaveLength(7);
-    expect(res.body.actualSales[6]).toBeNull(); // today: unobserved
-    for (let i = 0; i < 6; i++) {
-      expect(res.body.actualSales[i]).not.toBeNull();
+
+    const totalPoints = HISTORY_WINDOW + 7;
+    expect(res.body.labels).toHaveLength(totalPoints);
+    expect(res.body.actualSales).toHaveLength(totalPoints);
+    expect(res.body.predictedSales).toHaveLength(totalPoints);
+
+    // todayIndex marks the boundary
+    expect(res.body.todayIndex).toBe(HISTORY_WINDOW);
+
+    // History slots: actualSales are numbers, predictedSales are null
+    for (let i = 0; i < HISTORY_WINDOW; i++) {
       expect(typeof res.body.actualSales[i]).toBe("number");
+      expect(res.body.predictedSales[i]).toBeNull();
     }
+
+    // Forecast slots: actualSales are null, predictedSales are numbers
+    for (let i = HISTORY_WINDOW; i < totalPoints; i++) {
+      expect(res.body.actualSales[i]).toBeNull();
+      expect(typeof res.body.predictedSales[i]).toBe("number");
+    }
+
     expect(typeof res.body.total).toBe("number");
     expect(typeof res.body.trendPct).toBe("number");
   });
@@ -100,12 +117,12 @@ describe("GET /api/dashboard/prediction", () => {
     await seedSalesForDays(store._id.toString(), product.id, user._id.toString(), offsets);
 
     const res14 = await request(app).get("/api/dashboard/prediction?range=14days").set(authHeader(token));
-    expect(res14.body.labels).toHaveLength(14);
-    expect(res14.body.predictedSales).toHaveLength(14);
+    expect(res14.body.labels).toHaveLength(HISTORY_WINDOW + 14);
+    expect(res14.body.predictedSales).toHaveLength(HISTORY_WINDOW + 14);
 
     const res30 = await request(app).get("/api/dashboard/prediction?range=30days").set(authHeader(token));
-    expect(res30.body.labels).toHaveLength(30);
-    expect(res30.body.predictedSales).toHaveLength(30);
+    expect(res30.body.labels).toHaveLength(HISTORY_WINDOW + 30);
+    expect(res30.body.predictedSales).toHaveLength(HISTORY_WINDOW + 30);
   });
 
   it("scopes prediction data to the authenticated user's store only", async () => {

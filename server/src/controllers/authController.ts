@@ -22,6 +22,8 @@ function toUserResponse(user: IUserDocument) {
     email: user.email,
     role: user.role,
     storeId: user.storeId.toString(),
+    avatar: user.avatar ?? "",
+    phone: user.phone ?? "",
   };
 }
 

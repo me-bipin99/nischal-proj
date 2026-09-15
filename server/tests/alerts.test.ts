@@ -65,7 +65,7 @@ describe("Alerts API", () => {
     expect(res.body[0].severity).toBe("critical");
   });
 
-  it("POST /api/alerts/:id/reorder resets stock and removes the alert", async () => {
+  it("POST /api/alerts/:id/reorder creates a purchase order and marks the alert as processing", async () => {
     const { token } = await createTestUser();
     const product = await createProduct(token, { stock: 20, reorderLevel: 10 });
     await request(app).put(`/api/products/${product.id}`).set(authHeader(token)).send({ stock: 0 });
@@ -73,12 +73,17 @@ describe("Alerts API", () => {
     const alertsRes = await request(app).get("/api/alerts").set(authHeader(token));
     const alertId = alertsRes.body[0].id;
 
+    // The reorder endpoint creates a PurchaseOrder + emails the supplier (202 Accepted).
     const reorderRes = await request(app).post(`/api/alerts/${alertId}/reorder`).set(authHeader(token));
-    expect(reorderRes.status).toBe(200);
-    expect(reorderRes.body.stock).toBe(20); // reorderLevel * 2
+    expect(reorderRes.status).toBe(202);
+    expect(reorderRes.body).toHaveProperty("orderId");
+    expect(reorderRes.body).toHaveProperty("status", "processing");
+    expect(reorderRes.body.message).toMatch(/reorder placed/i);
 
+    // Alert should now be in "processing" state (awaiting supplier confirmation)
     const afterRes = await request(app).get("/api/alerts").set(authHeader(token));
-    expect(afterRes.body).toHaveLength(0);
+    expect(afterRes.body).toHaveLength(1);
+    expect(afterRes.body[0].status).toBe("processing");
   });
 
   it("POST /api/alerts/reorder-all clears every active alert for the store", async () => {

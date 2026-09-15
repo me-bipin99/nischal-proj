@@ -5,8 +5,8 @@ import {
   getActiveAlerts,
   markRead,
   reorderAll,
-  reorderByAlertId,
 } from "../services/alertService";
+import { createOrderController } from "./ordersController";
 
 function paramId(req: Request): string {
   const { id } = req.params;
@@ -31,23 +31,8 @@ export async function markAlertReadController(req: Request, res: Response): Prom
   }
 }
 
-export async function reorderAlertController(req: Request, res: Response): Promise<void> {
-  try {
-    const product = await reorderByAlertId(req.user!.storeId, paramId(req));
-    res.status(200).json({
-      id: product._id.toString(),
-      name: product.name,
-      stock: product.stock,
-      reorderLevel: product.reorderLevel,
-    });
-  } catch (err) {
-    if (err instanceof ProductNotFoundError || err instanceof AlertNotFoundError) {
-      res.status(404).json({ error: err.message });
-      return;
-    }
-    throw err;
-  }
-}
+// Delegate to order flow (creates PurchaseOrder + sends email)
+export { createOrderController as reorderAlertController };
 
 export async function reorderAllController(req: Request, res: Response): Promise<void> {
   const reorderedCount = await reorderAll(req.user!.storeId);

@@ -10,13 +10,14 @@ import { salesRouter } from "./routes/sales.routes";
 import { alertsRouter } from "./routes/alerts.routes";
 import { dashboardRouter } from "./routes/dashboard.routes";
 import { analyticsRouter } from "./routes/analytics.routes";
+import { ordersRouter } from "./routes/orders.routes";
 import { auth } from "./middleware/auth";
 import { errorHandler } from "./middleware/errorHandler";
 
 export function createApp(): Express {
   const app = express();
 
-  app.use(express.json());
+  app.use(express.json({ limit: "2mb" }));
   app.use(cors({ origin: env.corsOrigin }));
 
   app.get("/health", (_req, res) => {
@@ -27,6 +28,7 @@ export function createApp(): Express {
   });
 
   app.use("/api/auth", authRouter);
+  app.use("/api/orders", ordersRouter);  // public — token-gated confirm endpoint
   app.use("/api/settings", auth, settingsRouter);
   app.use("/api/account", auth, accountRouter);
   app.use("/api/products", auth, productsRouter);

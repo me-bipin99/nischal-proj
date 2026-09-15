@@ -97,10 +97,54 @@ const ShopSense = {
     localStorage.setItem(storageKey, JSON.stringify(data));
   },
 
-  // Currency formatter
-  formatCurrency(value, currencySymbol = '$') {
-    const num = parseFloat(value) || 0;
-    return `${currencySymbol}${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // ── Currency configuration ────────────────────────────────────────────────
+  // All prices in the database are stored in USD.
+  // Rates are approximate fixed values — good enough for display purposes.
+  CURRENCIES: {
+    USD: { symbol: '$',    rate: 1,        decimals: 2 },
+    EUR: { symbol: '€',    rate: 0.92,     decimals: 2 },
+    GBP: { symbol: '£',    rate: 0.79,     decimals: 2 },
+    CAD: { symbol: 'CA$',  rate: 1.36,     decimals: 2 },
+    AUD: { symbol: 'A$',   rate: 1.53,     decimals: 2 },
+    INR: { symbol: '₹',    rate: 83.5,     decimals: 2 },
+    NPR: { symbol: 'रू',   rate: 133.5,    decimals: 2 },
+    JPY: { symbol: '¥',    rate: 149.5,    decimals: 0 },
+    CNY: { symbol: '¥',    rate: 7.24,     decimals: 2 },
+    AED: { symbol: 'د.إ',  rate: 3.67,     decimals: 2 },
+  },
+
+  // Returns the active currency code (e.g. "NPR") from localStorage,
+  // falling back to USD if nothing is stored yet.
+  getCurrency() {
+    return localStorage.getItem('shopsense_currency') || 'USD';
+  },
+
+  // Converts a USD value to the active currency and formats it with the
+  // correct symbol.  All callers just pass the raw USD amount — no changes
+  // needed in any other JS file.
+  formatCurrency(usdValue) {
+    const code   = this.getCurrency();
+    const config = this.CURRENCIES[code] || this.CURRENCIES['USD'];
+    const converted = (parseFloat(usdValue) || 0) * config.rate;
+    const formatted = converted.toLocaleString('en-US', {
+      minimumFractionDigits: config.decimals,
+      maximumFractionDigits: config.decimals,
+    });
+    return `${config.symbol}${formatted}`;
+  },
+
+  // Re-renders every element that carries a data-price-usd attribute.
+  // Called whenever the active currency changes so all visible prices update
+  // instantly without a page reload.
+  refreshPrices() {
+    document.querySelectorAll('[data-price-usd]').forEach(el => {
+      const usd = parseFloat(el.getAttribute('data-price-usd'));
+      if (!isNaN(usd)) el.textContent = this.formatCurrency(usd);
+    });
+
+    // Keep the topbar currency badge in sync.
+    const badge = document.getElementById('topbar-currency-badge');
+    if (badge) badge.textContent = this.getCurrency();
   },
 
   // Formats a sale's date + time fields for display. The API may return
@@ -163,7 +207,95 @@ const ShopSense = {
     }
   },
 
-  // Highlight Active Link in Sidebar
+  // Fetches the live alert count from the API and updates the sidebar badge,
+  // topbar notification dot, count label, and dropdown list.
+  // Called once on every page load (via bindEvents) and polls every 15 seconds.
+  async refreshAlertBadge() {
+    const token = localStorage.getItem(this.KEYS.AUTH_TOKEN);
+    if (!token) return;
+
+    try {
+      const response = await this.apiFetch('/api/alerts');
+      if (!response.ok) return;
+      const alerts = await response.json();
+      if (!Array.isArray(alerts)) return;
+
+      // Count all alerts that still need attention — match exactly what
+      // the Alerts page shows (everything except fully acknowledged ones)
+      const active = alerts.filter(a => a.status !== 'acknowledged');
+      const activeCount = active.length;
+
+      // ── Sidebar badge ────────────────────────────────────────────────────
+      const sidebarBadge = document.getElementById('sidebar-alert-count');
+      if (sidebarBadge) {
+        if (activeCount > 0) {
+          sidebarBadge.textContent = activeCount > 99 ? '99+' : activeCount;
+          sidebarBadge.style.display = '';
+        } else {
+          sidebarBadge.style.display = 'none';
+        }
+      }
+
+      // ── Topbar bell dot ──────────────────────────────────────────────────
+      const dot = document.getElementById('topbar-notif-dot');
+      if (dot) dot.style.display = activeCount > 0 ? '' : 'none';
+
+      // ── Topbar "N New" count badge ───────────────────────────────────────
+      const countBadge = document.getElementById('topbar-notif-count');
+      if (countBadge) {
+        if (activeCount > 0) {
+          countBadge.textContent = `${activeCount > 99 ? '99+' : activeCount} New`;
+          countBadge.style.display = '';
+        } else {
+          countBadge.textContent = 'All Clear';
+          countBadge.style.display = '';
+        }
+      }
+
+      // ── Topbar dropdown list (show up to 5 most recent active alerts) ────
+      const list = document.getElementById('topbar-notif-list');
+      if (list) {
+        if (active.length === 0) {
+          list.innerHTML = `
+            <div class="text-center text-muted p-4 small">
+              <i class="bi bi-shield-check fs-4 d-block mb-1 text-success"></i>
+              All inventory levels healthy
+            </div>`;
+        } else {
+          const preview = active.slice(0, 5);
+          list.innerHTML = preview.map(a => {
+            const isCritical = a.severity === 'critical';
+            const icon  = isCritical ? 'bi-exclamation-triangle text-danger' : 'bi-exclamation-circle text-warning';
+            const label = isCritical ? 'text-danger' : 'text-warning';
+            const time  = a.timestamp
+              ? new Date(a.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+              : '';
+            return `
+              <a href="/pages/alerts.html" class="list-group-item list-group-item-action p-3">
+                <div class="d-flex w-100 justify-content-between">
+                  <strong class="${label}">
+                    <i class="bi ${icon} me-1"></i>
+                    ${isCritical ? 'Out of Stock' : 'Low Stock'}
+                  </strong>
+                  <small class="text-muted">${time}</small>
+                </div>
+                <p class="mb-0 text-muted small text-truncate">${a.productName} — ${a.message}</p>
+              </a>`;
+          }).join('');
+
+          if (active.length > 5) {
+            list.innerHTML += `
+              <div class="text-center text-muted p-2 small border-top">
+                +${active.length - 5} more alert${active.length - 5 === 1 ? '' : 's'}
+              </div>`;
+          }
+        }
+      }
+
+    } catch {
+      // Network error or 401 redirect — silently ignore
+    }
+  },
   getCurrentPage() {
     const path = window.location.pathname;
     if (path.includes('products') || path.includes('add-product') || path.includes('edit-product')) return 'products';
@@ -207,7 +339,7 @@ const ShopSense = {
             <a href="/pages/alerts.html" class="nav-link ${activePage === 'alerts' ? 'active' : ''}">
               <i class="bi bi-bell-fill"></i>
               <span>Alerts</span>
-              <span class="badge bg-danger rounded-pill ms-auto" id="sidebar-alert-count">3</span>
+              <span class="badge bg-danger rounded-pill ms-auto" id="sidebar-alert-count" style="display:none;"></span>
             </a>
             <a href="/pages/analytics.html" class="nav-link ${activePage === 'analytics' ? 'active' : ''}">
               <i class="bi bi-graph-up-arrow"></i>
@@ -250,34 +382,24 @@ const ShopSense = {
             </div>
           </div>
           <div class="d-flex align-items-center gap-3">
+            <!-- Active Currency Badge -->
+            <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1 rounded-2" id="topbar-currency-badge" title="Active display currency">${this.getCurrency()}</span>
+
             <!-- Notifications Dropdown -->
             <div class="dropdown">
-              <button class="btn btn-light rounded-circle position-relative p-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <button class="btn btn-light rounded-circle position-relative p-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="topbar-notif-btn">
                 <i class="bi bi-bell fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" id="topbar-notif-dot" style="display:none;">
                   <span class="visually-hidden">Unread notifications</span>
                 </span>
               </button>
               <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 rounded-3 mt-2" style="width: 320px;">
                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
                   <h6 class="mb-0 fw-semibold">Notifications</h6>
-                  <span class="badge bg-primary-subtle text-primary rounded-pill">3 New</span>
+                  <span class="badge bg-primary-subtle text-primary rounded-pill" id="topbar-notif-count" style="display:none;"></span>
                 </div>
-                <div class="list-group list-group-flush small" style="max-height: 280px; overflow-y: auto;">
-                  <a href="/pages/alerts.html" class="list-group-item list-group-item-action p-3">
-                    <div class="d-flex w-100 justify-content-between">
-                      <strong class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Out of Stock Alert</strong>
-                      <small class="text-muted">10m ago</small>
-                    </div>
-                    <p class="mb-1 text-muted small">Smart LED Desk Lamp is out of stock.</p>
-                  </a>
-                  <a href="/pages/alerts.html" class="list-group-item list-group-item-action p-3">
-                    <div class="d-flex w-100 justify-content-between">
-                      <strong class="text-warning"><i class="bi bi-exclamation-circle me-1"></i> Low Stock Warning</strong>
-                      <small class="text-muted">1h ago</small>
-                    </div>
-                    <p class="mb-1 text-muted small">Vitamin C Serum stock reached 2 bottles.</p>
-                  </a>
+                <div class="list-group list-group-flush small" id="topbar-notif-list" style="max-height: 280px; overflow-y: auto;">
+                  <div class="text-center text-muted p-3 small">Loading alerts…</div>
                 </div>
                 <div class="p-2 text-center border-top bg-light">
                   <a href="/pages/alerts.html" class="text-primary text-decoration-none small fw-medium">View All Alerts</a>
@@ -288,7 +410,7 @@ const ShopSense = {
             <!-- User Menu Dropdown -->
             <div class="dropdown">
               <a href="#" class="d-flex align-items-center gap-2 text-decoration-none text-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="User Avatar" class="rounded-circle" width="38" height="38" style="object-fit: cover;">
+                <img id="topbar-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="User Avatar" class="rounded-circle" width="38" height="38" style="object-fit: cover;">
                 <div class="d-none d-sm-block text-start">
                   <div class="fw-semibold lh-1" style="font-size: 0.9rem;" id="topbar-user-name">Alex Morgan</div>
                   <small class="text-muted" style="font-size: 0.75rem;">Store Manager</small>
@@ -320,22 +442,30 @@ const ShopSense = {
       `;
     }
 
-    // Populate topbar with the logged-in user's name, if known
-    const topbarNameElem = document.getElementById('topbar-user-name');
-    if (topbarNameElem) {
-      try {
-        const storedUser = JSON.parse(localStorage.getItem(this.KEYS.USER) || 'null');
-        if (storedUser && storedUser.fullName) {
+    // Populate topbar with the logged-in user's name and avatar, if known
+    try {
+      const storedUser = JSON.parse(localStorage.getItem(this.KEYS.USER) || 'null');
+      if (storedUser) {
+        const topbarNameElem = document.getElementById('topbar-user-name');
+        if (topbarNameElem && storedUser.fullName) {
           topbarNameElem.textContent = storedUser.fullName;
         }
-      } catch (e) { /* ignore malformed stored user */ }
-    }
+        const topbarAvatarElem = document.getElementById('topbar-user-avatar');
+        if (topbarAvatarElem && storedUser.avatar) {
+          topbarAvatarElem.src = storedUser.avatar;
+        }
+      }
+    } catch (e) { /* ignore malformed stored user */ }
 
     // Initialize Global Event Listeners
     this.bindEvents();
   },
 
   bindEvents() {
+    // Fetch live alert count immediately and then poll every 5 seconds
+    // so the sidebar badge stays in sync on every page without a reload.
+    this.refreshAlertBadge();
+    setInterval(() => this.refreshAlertBadge(), 5000);
     // Mobile Sidebar Toggle
     const toggleBtn = document.getElementById('mobile-sidebar-toggle');
     const sidebar = document.querySelector('.sidebar');
@@ -352,6 +482,14 @@ const ShopSense = {
         overlay.classList.remove('show');
       });
     }
+
+    // Currency change listeners — same-tab (custom event) and cross-tab
+    // (storage event). Both call refreshPrices() so every [data-price-usd]
+    // element and the topbar badge update without a page reload.
+    window.addEventListener('currencychange', () => this.refreshPrices());
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'shopsense_currency') this.refreshPrices();
+    });
 
     // Logout Action Listener
     const logoutBtns = document.querySelectorAll('#sidebar-logout-btn, #topbar-logout-btn');
